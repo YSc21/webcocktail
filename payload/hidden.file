@@ -1,0 +1,17 @@
+robots.txt
+.git/HEAD
+server-status
+config.php
+flag.php
+wwwroot.zip
+wwwroot.rar
+www.rar
+www.zip
+web.rar
+web.zip
+webbak.zip
+
+.index.php.swp
+index.php~
+index.bak
+index.tmp
