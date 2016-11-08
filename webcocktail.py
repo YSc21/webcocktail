@@ -15,7 +15,7 @@ def main():
     args = vars(parser.parse_args())
 
     wct = WebCocktail(**args)
-    wct.show_reqs()
+    wct.show_pages()
 
 if __name__ == '__main__':
     main()
