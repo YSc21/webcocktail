@@ -14,9 +14,18 @@ BOT_NAME = 'crawler'
 SPIDER_MODULES = ['webcocktail.crawler.spiders']
 NEWSPIDER_MODULE = 'webcocktail.crawler.spiders'
 
+LOG_ENABLED = True
+LOG_FILE = 'crawler.log'
+LOG_LEVEL = 'DEBUG'
+
+FEED_FORMAT = 'json'
+FEED_URI = 'crawler.json'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
+USER_AGENT = [
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B179 Safari/7534.48.3',
+    'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)',
+]
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -65,7 +74,7 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'crawler.pipelines.SomePipeline': 300,
+#    'webcocktail.crawler.pipelines.CrawlerPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)

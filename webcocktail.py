@@ -10,9 +10,13 @@ def main():
         description='Webcocktail: '
         'an automatic and lightweight web application fuzzing tool for CTF')
     parser.add_argument(
+        '-domain', nargs='*', metavar='domain',
+        help='extra carwler doamins')
+    parser.add_argument(
         'url', metavar='url',
         help='a website which you want to analysis')
     args = vars(parser.parse_args())
+    args['extra_domain'] = args.pop('domain')
 
     wct = WebCocktail(**args)
     wct.show_pages()
