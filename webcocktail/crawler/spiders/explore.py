@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from webcocktail.crawler.items import CrawlerItem
+from webcocktail.crawler.items import RequestItem
+from webcocktail.crawler.items import ResponseItem
+from webcocktail.error import ExploreSpiderError
 from urllib import parse
 
 
@@ -22,9 +24,33 @@ class ExploreSpider(scrapy.Spider):
         value = '' if value is None else value
         return (name, value)
 
+    def _dict_byte2str(self, d):
+        ret = {}
+        for key in d:
+            value = d.get(key)
+            value = value[0] if type(value) is list else value
+            ret[key.decode()] = value.decode()
+        return ret
+
     def _get_item(self, response):
-        item = CrawlerItem()
-        item['response'] = response
+        hidden_input = response.xpath('//input[@type="hidden"]').extract()
+        request = response.request
+
+        request_item = RequestItem()
+        request_item['method'] = request.method
+        request_item['url'] = request.url
+        request_item['headers'] = self._dict_byte2str(request.headers)
+        request_item['cookies'] = self._dict_byte2str(request.cookies)
+        # TODO: post json data
+        if request.body != b'':
+            request_item['data'] = request.body.decode()
+
+        item = ResponseItem()
+        item['comments'] = response.xpath('//comment()').extract()
+        item['hidden_input'] = hidden_input
+        item['length'] = len(response.body)
+        item['request'] = request_item
+        item['status'] = response.status
         return item
 
     def start_requests(self):

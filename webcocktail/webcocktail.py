@@ -4,6 +4,7 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from urllib import parse
 from webcocktail.crawler.spiders.explore import ExploreSpider
+from webcocktail.error import CrawlerError
 
 
 class WebCocktail(object):
@@ -11,6 +12,7 @@ class WebCocktail(object):
     def __init__(self, url='', extra_domain=[]):
         self.target = self._check_url(url)
         self.extra_domain = extra_domain
+        # TODO: reqs -> ResponseItem
         self.reqs = {requests.get(url)}
         self.crawl(self.target, self.extra_domain)
         # self.scan()
@@ -34,6 +36,13 @@ class WebCocktail(object):
         process.crawl(ExploreSpider, **kwargs)
         process.start()
 
+        with open('crawler.log', 'r') as f:
+            lines = f.readlines()
+        log = ''.join(lines)
+        if 'Error: ' in log:
+            raise CrawlerError('There are some errors in crawler. '
+                               'Please check up crawler.log')
+
     def scan(self):
         with open('payload/hidden.file', 'r') as f:
             for path in f:
@@ -46,4 +55,5 @@ class WebCocktail(object):
 
     def show_pages(self):
         for r in self.reqs:
-            print('status: %3s, Content-Length: %5s, url: %s' % (r.status_code, r.headers['Content-Length'], r.url))
+            print('status: %3s, Content-Length: %5s, url: %s' %
+                  (r.status_code, r.headers['Content-Length'], r.url))
