@@ -15,7 +15,7 @@ class ExploreSpider(scrapy.Spider):
             raise ValueError("%s must have an url" % type(self).__name__)
         if not self.allowed_domains:
             raise ValueError("%s must have a domain" % type(self).__name__)
-        self.__class__.allowed_domains = self.allowed_domains
+        ExploreSpider.allowed_domains = self.allowed_domains
 
     def _get_input_data(self, attr_input):
         name = attr_input.xpath('@name').extract_first()
