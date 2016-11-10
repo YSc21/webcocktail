@@ -30,8 +30,11 @@ class Plugin(object):
         for payload in self.payloads:
             request = origin_request.copy()
             request = self.hook_request(payload, request)
+            request = self.tamper_request(payload, request)
+
             response = requests.request(**request)
             self.log.info('{r} {r.url}'.format(r=response))
+
             response = self.hook_response(payload, response)
             if response:
                 results.append(response)
@@ -41,7 +44,11 @@ class Plugin(object):
         return payload
 
     def hook_request(self, payload, request):
-        raise NotImplementedError('hook_request is not implemented.')
+        request['verify'] = False
+        return request
+
+    def tamper_request(self, payload, request):
+        raise NotImplementedError('tamper_request is not implemented.')
 
     def hook_response(self, payload, response):
         if response.status_code != 404:

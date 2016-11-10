@@ -8,6 +8,6 @@ class ScanFile(Plugin):
     name = __name__
     payload_file = 'payloads/hidden.file'
 
-    def hook_request(self, payload, request):
+    def tamper_request(self, payload, request):
         request['url'] += payload
         return request
