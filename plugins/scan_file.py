@@ -9,5 +9,5 @@ class ScanFile(Plugin):
     payload_file = 'payloads/hidden.file'
 
     def tamper_request(self, payload, request):
-        request['url'] += payload
+        request.url += payload
         return request

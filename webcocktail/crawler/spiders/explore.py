@@ -33,7 +33,7 @@ class ExploreSpider(scrapy.Spider):
         return ret
 
     def _get_item(self, response):
-        hidden_input = response.xpath('//input[@type="hidden"]').extract()
+        hidden_inputs = response.xpath('//input[@type="hidden"]').extract()
         request = response.request
 
         request_item = RequestItem()
@@ -47,10 +47,11 @@ class ExploreSpider(scrapy.Spider):
 
         item = ResponseItem()
         item['comments'] = response.xpath('//comment()').extract()
-        item['hidden_input'] = hidden_input
+        item['content'] = response.body.decode()
+        item['hidden_inputs'] = hidden_inputs
         item['length'] = len(response.body)
         item['request'] = request_item
-        item['status'] = response.status
+        item['status_code'] = response.status
         return item
 
     def start_requests(self):

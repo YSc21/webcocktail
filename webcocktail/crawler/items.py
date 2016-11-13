@@ -10,10 +10,11 @@ import scrapy
 
 class ResponseItem(scrapy.Item):
     comments = scrapy.Field()
-    hidden_input = scrapy.Field()
+    content = scrapy.Field()
+    hidden_inputs = scrapy.Field()
     length = scrapy.Field()
     request = scrapy.Field()
-    status = scrapy.Field()
+    status_code = scrapy.Field()
 
 
 class RequestItem(scrapy.Item):

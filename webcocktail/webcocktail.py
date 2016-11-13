@@ -2,6 +2,7 @@ import json
 import os
 from pprint import pprint
 import re
+import requests
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from urllib import parse
@@ -33,6 +34,22 @@ class WebCocktail(object):
         self.log.info('Target: ' + target)
         return target
 
+    def filter_page(self, category, response):
+        # TODO: filter existed page
+        return response
+
+    def add_page(self, response):
+        if response.status_code == 200:
+            category = 'active'
+            response = self.filter_page(category, response)
+        else:
+            category = 'other'
+
+        if response:
+            self.__dict__[category + '_pages'].append(response)
+            return True
+        return False
+
     def crawl(self, target, extra_domain=[]):
         domains = [parse.urlparse(target).netloc] + extra_domain
         kwargs = {'urls': [target], 'allowed_domains': domains}
@@ -43,10 +60,7 @@ class WebCocktail(object):
         process = CrawlerProcess(get_project_settings())
         process.crawl(ExploreSpider, **kwargs)
         process.start()
-
-        # load status code 200 page
-        with open('crawler.json', 'r') as f:
-            self.active_pages.extend(json.load(f))
+        process.stop()
 
         with open('crawler.log', 'r') as f:
             lines = f.readlines()
@@ -55,24 +69,40 @@ class WebCocktail(object):
             raise CrawlerError('There are some errors in crawler. '
                                'Please check up crawler.log')
 
+        # load status code 200 page
+        with open('crawler.json', 'r') as f:
+            crawled_pages = json.load(f)
+        for page in crawled_pages:
+            response = requests.request(**page['request'])
+            response.comments = page['comments']
+            response.hidden_inputs = page['hidden_inputs']
+            self.add_page(response)
+
         # TODO: how to extract 302, 404 in scrapy?
         # load other status code (302, 404, ...) response in crawler.log
         responses = re.findall(
             '(?!.*\(200\).*).*DEBUG:.*\((\d*)\).*<(.*) (.*)> (.*)', log)
         for response in responses:
             if response[0] == '302':
-                status = response[0]
+                status_code = response[0]
                 method, url = re.findall('.*<(.*) (.*)>.*', response[-1])[0]
             else:
-                status, method, url, _ = response
+                status_code, method, url, _ = response
             item = ResponseItem()
-            item['status'] = int(status)
+            item['status_code'] = int(status_code)
             item['request'] = {'method': method, 'url': url}
-            self.other_pages.append(item)
+            response = requests.request(**item['request'])
+            # FIXME: response is 200, should be 403
+            if not self.add_page(response):
+                self.log.warning(
+                    'Different request between crawler ans requests')
 
     def default_scan(self):
         self.scanner.use('default')
-        results = self.scanner.scan(self.active_pages[0]['request'])
+        index_page = self.active_pages[0].request
+        results = self.scanner.scan(index_page)
+        for result in results:
+            self.add_page(result)
         return results
         # TODO: save result to self.active_pages
 
@@ -81,5 +111,5 @@ class WebCocktail(object):
         pprint(self.active_pages)
         pprint(self.other_pages)
         # for r in self.reqs:
-        #     print('status: %3s, Content-Length: %5s, url: %s' %
+        #     print('status code: %3s, Content-Length: %5s, url: %s' %
         #           (r.status_code, r.headers['Content-Length'], r.url))

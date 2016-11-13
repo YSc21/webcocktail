@@ -21,36 +21,35 @@ class Plugin(object):
     @property
     def payloads(self):
         for payload in self._payloads:
-            payload = self.hook_payload(payload)
+            payload = self.tamper_payload(payload)
             yield payload
 
     def get_results(self, request):
         origin_request = request
         results = []
         for payload in self.payloads:
+            session = requests.session()
             request = origin_request.copy()
-            request = self.hook_request(payload, request)
             request = self.tamper_request(payload, request)
-
-            response = requests.request(**request)
+            response = session.send(request)
             self.log.info('{r} {r.url}'.format(r=response))
 
-            response = self.hook_response(payload, response)
+            response = self.filter_response(payload, response)
             if response:
                 results.append(response)
         return results
 
-    def hook_payload(self, payload):
+    def tamper_payload(self, payload):
         return payload
 
-    def hook_request(self, payload, request):
+    def tamper_request(self, payload, request):
+        '''
+        every plugin need to override this method
+        '''
         request['verify'] = False
         return request
 
-    def tamper_request(self, payload, request):
-        raise NotImplementedError('tamper_request is not implemented.')
-
-    def hook_response(self, payload, response):
+    def filter_response(self, payload, response):
         if response.status_code != 404:
             return response
         return None
