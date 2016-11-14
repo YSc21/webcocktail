@@ -6,6 +6,7 @@ import requests
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from urllib import parse
+import webcocktail.utils as utils
 from webcocktail.crawler.items import ResponseItem
 from webcocktail.crawler.spiders.explore import ExploreSpider
 from webcocktail.error import CrawlerError
@@ -17,28 +18,29 @@ class WebCocktail(object):
 
     def __init__(self, url='', extra_domain=[]):
         self.log = get_log(self.__class__.__name__)
-        self.target = self._check_url(url)
+        self.target = utils.check_url(url)
         self.extra_domain = extra_domain
         self.active_pages = []
+        self.active_hashes = []
         self.other_pages = []
         self.scanner = Scanner(self)
 
         self.crawl(self.target, self.extra_domain)
         self.default_scan()
 
-    def _check_url(self, url):
-        if not url.startswith('http') and not url.startswith('https'):
-            url = 'http://' + url
-        uri = parse.urlparse(url)
-        target = '{uri.scheme}://{uri.netloc}/'.format(uri=uri)
-        self.log.info('Target: ' + target)
-        return target
-
     def filter_page(self, category, response):
-        # TODO: filter existed page
+        hashes = self.__dict__[category + '_hashes']
+        new_hash = utils.hash(response.content)
+        if new_hash in hashes:
+            self.log.info('%s has been in %s_pages' %
+                          (response.url, category))
+            return None
+        else:
+            hashes.append(new_hash)
         return response
 
     def add_page(self, response):
+        url = response.url
         if response.status_code == 200:
             category = 'active'
             response = self.filter_page(category, response)
@@ -47,8 +49,9 @@ class WebCocktail(object):
 
         if response is not None:
             self.__dict__[category + '_pages'].append(response)
-            return
-        self.log.error('Can\'t add %s to pages' % response.url)
+        else:
+            self.log.warning('Doesn\'t add %s to %s_pages' %
+                             (url, category))
 
     def crawl(self, target, extra_domain=[]):
         domains = [parse.urlparse(target).netloc] + extra_domain
@@ -76,6 +79,11 @@ class WebCocktail(object):
             response = requests.request(**page['request'])
             response.comments = page['comments']
             response.hidden_inputs = page['hidden_inputs']
+            if (utils.hash(response.content) !=
+                    utils.hash(page['content'].encode())):
+                self.log.warning(
+                    'Different request (status code: 200) content '
+                    'between crawler and requests')
             self.add_page(response)
 
         # TODO: how to extract 302, 404 in scrapy?
@@ -96,9 +104,9 @@ class WebCocktail(object):
             response = requests.request(**item['request'])
             if response.status_code != item['status_code']:
                 self.log.warning(
-                    'Different request between crawler ans requests.')
+                    'Different request between crawler and requests')
                 self.log.warning(
-                    '... %s should be %d but got %d.' % (
+                    '... %s should be %d but got %d' % (
                         item['request']['url'], item['status_code'],
                         response.status_code)
                 )
