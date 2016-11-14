@@ -45,10 +45,10 @@ class WebCocktail(object):
         else:
             category = 'other'
 
-        if response:
+        if response is not None:
             self.__dict__[category + '_pages'].append(response)
-            return True
-        return False
+            return
+        self.log.error('Can\'t add %s to pages' % response.url)
 
     def crawl(self, target, extra_domain=[]):
         domains = [parse.urlparse(target).netloc] + extra_domain
@@ -80,22 +80,29 @@ class WebCocktail(object):
 
         # TODO: how to extract 302, 404 in scrapy?
         # load other status code (302, 404, ...) response in crawler.log
-        responses = re.findall(
+        parsed_other = re.findall(
             '(?!.*\(200\).*).*DEBUG:.*\((\d*)\).*<(.*) (.*)> (.*)', log)
-        for response in responses:
-            if response[0] == '302':
-                status_code = response[0]
-                method, url = re.findall('.*<(.*) (.*)>.*', response[-1])[0]
+        for parsed in parsed_other:
+            if parsed[0] == '302':
+                status_code = parsed[0]
+                method, url = re.findall('.*<(.*) (.*)>.*', parsed[-1])[0]
             else:
-                status_code, method, url, _ = response
+                status_code, method, url, _ = parsed
             item = ResponseItem()
             item['status_code'] = int(status_code)
-            item['request'] = {'method': method, 'url': url}
+            item['request'] = {'method': method, 'url': url,
+                               'allow_redirects': False,
+                               'verify': False}
             response = requests.request(**item['request'])
-            # FIXME: response is 200, should be 403
-            if not self.add_page(response):
+            if response.status_code != item['status_code']:
                 self.log.warning(
-                    'Different request between crawler ans requests')
+                    'Different request between crawler ans requests.')
+                self.log.warning(
+                    '... %s should be %d but got %d.' % (
+                        item['request']['url'], item['status_code'],
+                        response.status_code)
+                )
+            self.add_page(response)
 
     def default_scan(self):
         self.scanner.use('default')
