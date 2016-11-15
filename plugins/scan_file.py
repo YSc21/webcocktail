@@ -6,8 +6,10 @@ logger = get_log(__name__)
 
 class ScanFile(Plugin):
     name = __name__
-    payload_file = 'payloads/hidden.file'
+    payload_file = 'payloads/hidden_file.txt'
 
     def tamper_request(self, payload, request):
+        request.allow_redirects = False
+        request.verify = False
         request.url += payload
         return request

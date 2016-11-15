@@ -1,0 +1,8 @@
+.{PAGE}.php
+{PAGE}.php.swp
+.{PAGE}.php.swp
+{PAGE}.php~
+{PAGE}.phps
+{PAGE}.bak
+{PAGE}.tmp
+{PAGE}.inc

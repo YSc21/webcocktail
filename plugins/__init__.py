@@ -17,6 +17,6 @@ for f in glob(os.path.join(os.path.dirname(__file__), '*.py')):
 
     # get class in the module
     for c in inspect.getmembers(module, inspect.isclass):
-        # c = ('class_name', class)
+        # c = ('className', class), class_name should be __file__
         if c[1].__module__ == module_name:
             all_plugins.update([c])

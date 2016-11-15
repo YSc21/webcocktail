@@ -25,6 +25,7 @@ class WebCocktail(object):
         self.other_pages = []
         self.scanner = Scanner(self)
 
+        self.add_page(requests.get(self.target))
         self.crawl(self.target, self.extra_domain)
         self.default_scan()
 
@@ -82,8 +83,8 @@ class WebCocktail(object):
             if (utils.hash(response.content) !=
                     utils.hash(page['content'].encode())):
                 self.log.warning(
-                    'Different request (status code: 200) content '
-                    'between crawler and requests')
+                    'Different request %s content '
+                    'between crawler and requests' % response.url)
             self.add_page(response)
 
         # TODO: how to extract 302, 404 in scrapy?
@@ -113,13 +114,17 @@ class WebCocktail(object):
             self.add_page(response)
 
     def default_scan(self):
-        self.scanner.use('default')
+        self.scanner.use('ScanFile')
         index_page = self.active_pages[0].request
         results = self.scanner.scan(index_page)
+
+        self.scanner.use('default')
+        requests = [p.request for p in self.active_pages[1:]]
+        results.extend(self.scanner.scan_all(requests))
+
         for result in results:
             self.add_page(result)
         return results
-        # TODO: save result to self.active_pages
 
     def show_pages(self):
         # TODO: make it pretty

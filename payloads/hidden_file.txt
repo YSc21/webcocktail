@@ -18,3 +18,16 @@ web.zip
 webbak.zip
 backup.zip
 backup.rar
+
+# admin page
+admin.php
+admin/
+phpMyAdmin/
+
+# upload file page
+upload/
+uploads/
+file/
+files/
+tmp/
+temp/

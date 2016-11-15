@@ -3,7 +3,7 @@ from webcocktail.log import get_log
 
 
 class Scanner(object):
-    DEFAULT = ['ScanFile']
+    DEFAULT = ['ScanTemp']
 
     def __init__(self, webcocktail):
         self.log = get_log(self.__class__.__name__)
@@ -25,6 +25,7 @@ class Scanner(object):
             self.using.update((k, v) for k, v in items if k in Scanner.DEFAULT)
         elif name in self.plugins:
             self.using[name] = self.plugins[name]
+        self.log.info('Plugins: %s is using' % self.using)
 
     def disuse(self, name):
         if name == 'all':
@@ -40,9 +41,8 @@ class Scanner(object):
             results.extend(self.using[name].get_results(request))
         return results
 
-    def scan_all(self):
+    def scan_all(self, requests):
         results = []
-        requests = self.webcocktail.active_pages
         for request in requests:
             results.extend(self.scan(request))
         return results

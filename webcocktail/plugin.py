@@ -43,11 +43,7 @@ class Plugin(object):
         return payload
 
     def tamper_request(self, payload, request):
-        '''
-        every plugin need to override this method
-        '''
-        request['verify'] = False
-        return request
+        raise NotImplementedError('tamper_request should be implemented.')
 
     def filter_response(self, payload, response):
         if response.status_code != 404:
