@@ -1,5 +1,5 @@
-import requests
 from webcocktail.log import get_log
+import webcocktail.utils as utils
 
 
 class Plugin(object):
@@ -28,14 +28,13 @@ class Plugin(object):
         origin_request = request
         results = []
         for payload in self.payloads:
-            session = requests.session()
             request = origin_request.copy()
             request = self.tamper_request(payload, request)
-            response = session.send(request)
+            response = utils.send(request)
             self.log.info('{r} {r.url}'.format(r=response))
 
             response = self.filter_response(payload, response)
-            if response:
+            if response is not None:
                 results.append(response)
         return results
 

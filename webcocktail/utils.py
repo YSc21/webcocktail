@@ -1,4 +1,5 @@
 import hashlib
+import requests
 from urllib import parse
 from webcocktail.log import get_log
 
@@ -18,3 +19,9 @@ def hash(value):
     sha1 = hashlib.sha1()
     sha1.update(value)
     return sha1.hexdigest()
+
+
+def send(request):
+    session = requests.session()
+    response = session.send(request)
+    return response
