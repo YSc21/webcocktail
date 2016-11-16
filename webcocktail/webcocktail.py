@@ -6,12 +6,12 @@ import requests
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from urllib import parse
-import webcocktail.utils as utils
 from webcocktail.crawler.items import ResponseItem
 from webcocktail.crawler.spiders.explore import ExploreSpider
 from webcocktail.error import CrawlerError
 from webcocktail.log import get_log
 from webcocktail.scanner import Scanner
+import webcocktail.utils as utils
 
 
 class WebCocktail(object):
@@ -114,9 +114,10 @@ class WebCocktail(object):
             self.add_page(response)
 
     def default_scan(self):
+        index_request = self.active_pages[0].request
+
         self.scanner.use('ScanFile')
-        index_page = self.active_pages[0].request
-        results = self.scanner.scan(index_page)
+        results = self.scanner.scan(index_request)
 
         self.scanner.use('default')
         requests = [p.request for p in self.active_pages[1:]]

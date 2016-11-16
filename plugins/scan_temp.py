@@ -2,11 +2,8 @@ from urllib import parse
 from webcocktail.log import get_log
 from webcocktail.plugin import Plugin
 
-logger = get_log(__name__)
-
 
 class ScanTemp(Plugin):
-    name = __name__
     payload_file = 'payloads/temp_file.txt'
 
     def tamper_request(self, payload, request):

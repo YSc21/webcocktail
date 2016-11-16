@@ -18,6 +18,7 @@ web.zip
 webbak.zip
 backup.zip
 backup.rar
+database.sql
 
 # admin page
 admin.php

