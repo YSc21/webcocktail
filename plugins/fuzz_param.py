@@ -30,7 +30,7 @@ class FuzzParam(Plugin):
         payloads = self._get_payloads(uri.query, payload)
         for pyload in payloads:
             request = origin_request.copy()
-            uri._replace(query=payload)
+            uri = uri._replace(query=payload)
             request.url = parse.urlunparse(uri)
             self.log.debug(request.url)
             requests.append(request)

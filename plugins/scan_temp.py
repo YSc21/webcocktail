@@ -17,8 +17,6 @@ class ScanTemp(Plugin):
             self.log.error('url pathname %s doesn\'t match \{NAME\}.\{EXT\}',
                            uri.path)
         payload = payload.replace('{PAGE}', name)
-        request.url = (
-            '{uri.scheme}://{uri.netloc}/{payload}'.format(
-                uri=uri, payload=payload)
-        )
+        uri = uri._replace(path=payload)
+        request.url = parse.urlunparse(uri)
         return request
