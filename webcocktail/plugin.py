@@ -30,12 +30,20 @@ class Plugin(object):
         for payload in self.payloads:
             request = origin_request.copy()
             request = self.tamper_request(payload, request)
-            response = utils.send(request)
-            self.log.info('{r} {r.url}'.format(r=response))
 
-            response = self.filter_response(payload, response)
-            if response is not None:
-                results.append(response)
+            requests = request if type(request) is list else [request]
+            for request in requests:
+                if request is None:
+                    self.log.warning(
+                        'origin payload: %s and url: %s doesn\'t request'
+                        % (payload, origin_request.url))
+                    continue
+                response = utils.send(request)
+                self.log.info('{r} {r.url}'.format(r=response))
+
+                response = self.filter_response(payload, response)
+                if response is not None:
+                    results.append(response)
         return results
 
     def tamper_payload(self, payload):

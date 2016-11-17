@@ -3,7 +3,7 @@ from webcocktail.log import get_log
 
 
 class Scanner(object):
-    DEFAULT = ['ScanTemp', 'FuzzHeader']
+    DEFAULT = ['ScanTemp', 'FuzzHeader', 'FuzzParam']
 
     def __init__(self, webcocktail):
         self.log = get_log(self.__class__.__name__)
@@ -25,11 +25,11 @@ class Scanner(object):
             self.using.update((k, v) for k, v in items if k in Scanner.DEFAULT)
         elif name in self.plugins:
             self.using[name] = self.plugins[name]
-        self.log.info('Plugins: %s is using' % [p for p in self.using])
+        self.log.info('Using plugins: %s' % [p for p in self.using])
 
     def disuse(self, name):
         if name == 'all':
-            self.using.clear()
+            self.using = dict()
         elif name in self.plugins:
             self.using.pop(name)
 

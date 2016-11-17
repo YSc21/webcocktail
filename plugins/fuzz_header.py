@@ -1,10 +1,9 @@
-from urllib import parse
 from webcocktail.log import get_log
 from webcocktail.plugin import Plugin
 
 
 class FuzzHeader(Plugin):
-    payload_file = 'payloads/header.txt'
+    payload_file = 'payloads/fuzz_header.txt'
     url = 'http://127.0.0.1:8080/'
     host = '127.0.0.1'
     port = '10080'
