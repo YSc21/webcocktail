@@ -42,6 +42,8 @@ class Plugin(object):
                 self.log.info('{r} {r.url}'.format(r=response))
 
                 response = self.filter_response(payload, response)
+                # use `if response is not None` rather than `if response`
+                # because 403 in `if response` will be False
                 if response is not None:
                     results.append(response)
         return results

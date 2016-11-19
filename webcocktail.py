@@ -32,8 +32,7 @@ def main():
               'IPython Interactive Mode!\n'
               'You can use wct.show_pages() to show scanned pages.')
         import IPython
-        shell = IPython.terminal.embed.InteractiveShellEmbed()
-        shell.mainloop()
+        IPython.embed()
 
 if __name__ == '__main__':
     main()
