@@ -10,11 +10,13 @@ from webcocktail.crawler.items import ResponseItem
 from webcocktail.crawler.spiders.explore import ExploreSpider
 from webcocktail.error import CrawlerError
 from webcocktail.log import get_log
+from webcocktail.log import print_response
 from webcocktail.scanner import Scanner
 import webcocktail.utils as utils
 
 
 class WebCocktail(object):
+    CATEGORY = ['active', 'other']
 
     def __init__(self, url='', extra_domain=[]):
         self.log = get_log(self.__class__.__name__)
@@ -25,7 +27,6 @@ class WebCocktail(object):
         self.other_pages = []
         self.scanner = Scanner(self)
 
-        self.add_page(requests.get(self.target))
         self.crawl(self.target, self.extra_domain)
         self.default_scan()
 
@@ -127,10 +128,14 @@ class WebCocktail(object):
             self.add_page(result)
         return results
 
-    def show_pages(self):
-        # TODO: make it pretty
-        pprint(self.active_pages)
-        pprint(self.other_pages)
-        # for r in self.reqs:
-        #     print('status code: %3s, Content-Length: %5s, url: %s' %
-        #           (r.status_code, r.headers['Content-Length'], r.url))
+    def show_pages(self, category='all', filter_function=None, **kwargs):
+        if not filter_function:
+            def filter_function(response):
+                return response
+        for define_category in WebCocktail.CATEGORY:
+            if category == define_category or category == 'all':
+                print('===== %s pages =====' % define_category)
+                pages = self.__dict__[define_category + '_pages']
+                for response in pages:
+                    if filter_function(response) is not None:
+                        print_response(response, **kwargs)
