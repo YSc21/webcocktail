@@ -54,7 +54,7 @@ class WebCocktail(object):
                 new_hash = utils.hash(response.content)
                 hashes.append(new_hash)
             self.log.info(
-                'Add the request: {r} {r.url}'.format(r=response))
+                'Found a new response: {r} {r.url}'.format(r=response))
 
     def crawl(self, target, extra_domain=[]):
         domains = [parse.urlparse(target).netloc] + extra_domain
