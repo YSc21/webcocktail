@@ -39,6 +39,7 @@ class Plugin(object):
                         % (payload, origin_request.url))
                     continue
                 response = utils.send(request)
+                response.wct_found_by = self.__class__.__name__
                 self.log.info('{r} {r.url}'.format(r=response))
 
                 response = self.filter_response(payload, response)

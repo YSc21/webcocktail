@@ -1,4 +1,5 @@
 import logging
+from pprint import pprint
 
 
 class Handler(logging.StreamHandler):
@@ -18,7 +19,7 @@ def get_log(name):
     return log
 
 
-def print_response(r, fields=None):
+def print_response(r, fields=[]):
     log_format = ('status code: %3s, Content-Length: %5s, url: %s')
     if 'Content-Length' in r.headers:
         length = r.headers['Content-Length']
@@ -27,7 +28,7 @@ def print_response(r, fields=None):
     print(log_format % (r.status_code, length, r.url))
 
     if not fields:
-        fields = ['comments', 'hidden_inputs']
+        fields = ['wct_found_by', 'wct_comments', 'wct_hidden_inputs']
     for field in fields:
         if hasattr(r, field) and r.__dict__[field]:
             print('... %s: %s' % (field, r.__dict__[field]))

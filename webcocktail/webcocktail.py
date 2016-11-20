@@ -80,8 +80,9 @@ class WebCocktail(object):
             crawled_pages = json.load(f)
         for page in crawled_pages:
             response = requests.request(**page['request'])
-            response.comments = page['comments']
-            response.hidden_inputs = page['hidden_inputs']
+            response.wct_found_by = 'crawler'
+            response.wct_comments = page['comments']
+            response.wct_hidden_inputs = page['hidden_inputs']
             if (utils.hash(response.content) !=
                     utils.hash(page['content'].encode())):
                 self.log.warning(
@@ -99,19 +100,15 @@ class WebCocktail(object):
                 method, url = re.findall('.*<(.*) (.*)>.*', parsed[-1])[0]
             else:
                 status_code, method, url, _ = parsed
-            item = ResponseItem()
-            item['status_code'] = int(status_code)
-            item['request'] = {'method': method, 'url': url,
-                               'allow_redirects': False,
-                               'verify': False}
-            response = requests.request(**item['request'])
-            if response.status_code != item['status_code']:
+            request = {'method': method, 'url': url,
+                       'allow_redirects': False, 'verify': False}
+            response = requests.request(**request)
+            response.wct_found_by = 'crawler'
+            if response.status_code != int(status_code):
                 self.log.warning(
-                    'Different request between crawler and requests')
-                self.log.warning(
-                    '... %s should be %d but got %d' % (
-                        item['request']['url'], item['status_code'],
-                        response.status_code)
+                    'Different request between crawler and requests: '
+                    '%s should be %d but got %d' % (
+                        response.url, int(status_code), response.status_code)
                 )
             self.add_page(response)
 
