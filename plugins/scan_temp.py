@@ -1,10 +1,11 @@
+import config
 from urllib import parse
 from webcocktail.log import get_log
 from webcocktail.plugin import Plugin
 
 
 class ScanTemp(Plugin):
-    payload_file = 'payloads/temp_file.txt'
+    payload_file = config.SCANTEMP_PAYLOAD
 
     def tamper_request(self, payload, request):
         request.allow_redirects = False

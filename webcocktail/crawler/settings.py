@@ -9,20 +9,22 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
+import config
+
 BOT_NAME = 'crawler'
 
 SPIDER_MODULES = ['webcocktail.crawler.spiders']
 NEWSPIDER_MODULE = 'webcocktail.crawler.spiders'
 
 LOG_ENABLED = True
-LOG_FILE = 'crawler.log'
+LOG_FILE = config.CRAWLER_LOG
 LOG_LEVEL = 'DEBUG'
 
 FEED_FORMAT = 'json'
-FEED_URI = 'crawler.json'
+FEED_URI = config.CRAWLER_RESULT
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
+USER_AGENT = config.USER_AGENT
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False

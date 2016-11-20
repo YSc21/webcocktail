@@ -1,3 +1,4 @@
+import config
 import hashlib
 import requests
 from urllib import parse
@@ -23,5 +24,7 @@ def hash(value):
 
 def send(request):
     session = requests.session()
+    if 'requests' in request.headers['User-Agent']:
+        request.headers['User-Agent'] = config.USER_AGENT
     response = session.send(request)
     return response

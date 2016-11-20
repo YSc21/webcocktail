@@ -1,10 +1,11 @@
+import config
 from urllib import parse
 from webcocktail.log import get_log
 from webcocktail.plugin import Plugin
 
 
 class FuzzParam(Plugin):
-    payload_file = 'payloads/fuzz_param.txt'
+    payload_file = config.FUZZPARAM_PAYLOAD
 
     def _get_payloads(self, query, payload):
         payloads = []

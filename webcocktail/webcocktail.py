@@ -1,3 +1,4 @@
+import config
 import json
 import os
 from pprint import pprint
@@ -58,24 +59,24 @@ class WebCocktail(object):
     def crawl(self, target, extra_domain=[]):
         domains = [parse.urlparse(target).netloc] + extra_domain
         kwargs = {'urls': [target], 'allowed_domains': domains}
-        if os.path.isfile('crawler.log'):
-            os.remove('crawler.log')
-        if os.path.isfile('crawler.json'):
-            os.remove('crawler.json')
+        if os.path.isfile(config.CRAWLER_LOG):
+            os.remove(config.CRAWLER_LOG)
+        if os.path.isfile(config.CRAWLER_RESULT):
+            os.remove(config.CRAWLER_RESULT)
         process = CrawlerProcess(get_project_settings())
         process.crawl(ExploreSpider, **kwargs)
         process.start()
         process.stop()
 
-        with open('crawler.log', 'r') as f:
+        with open(config.CRAWLER_LOG, 'r') as f:
             lines = f.readlines()
         log = ''.join(lines)
         if 'Error: ' in log:
             raise CrawlerError('There are some errors in crawler. '
-                               'Please check up crawler.log')
+                               'Please check up %s' % config.CRAWLER_LOG)
 
         # load status code 200 page
-        with open('crawler.json', 'r') as f:
+        with open(config.CRAWLER_RESULT, 'r') as f:
             crawled_pages = json.load(f)
         for page in crawled_pages:
             response = requests.request(**page['request'])
@@ -89,7 +90,7 @@ class WebCocktail(object):
             self.add_page(response)
 
         # TODO: how to extract 302, 404 in scrapy?
-        # load other status code (302, 404, ...) response in crawler.log
+        # load other status code (302, 404, ...) response in config.CRAWLER_LOG
         parsed_other = re.findall(
             '(?!.*\(200\).*).*DEBUG:.*\((\d*)\).*<(.*) (.*)> (.*)', log)
         for parsed in parsed_other:
