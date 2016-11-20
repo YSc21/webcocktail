@@ -38,12 +38,9 @@ class WebCocktail(object):
             self.log.info('%s has been in %s_pages' %
                           (response.url, category))
             return None
-        else:
-            hashes.append(new_hash)
         return response
 
     def add_page(self, response):
-        url = response.url
         if response.status_code == 200:
             category = 'active'
             response = self.filter_page(category, response)
@@ -52,9 +49,12 @@ class WebCocktail(object):
 
         if response is not None:
             self.__dict__[category + '_pages'].append(response)
-        else:
-            self.log.warning('Doesn\'t add %s to %s_pages' %
-                             (url, category))
+            if category != 'other':
+                hashes = self.__dict__[category + '_hashes']
+                new_hash = utils.hash(response.content)
+                hashes.append(new_hash)
+            self.log.info(
+                'Add the request: {r} {r.url}'.format(r=response))
 
     def crawl(self, target, extra_domain=[]):
         domains = [parse.urlparse(target).netloc] + extra_domain
@@ -117,6 +117,8 @@ class WebCocktail(object):
 
         self.scanner.use('ScanFile')
         results = self.scanner.scan(index_request)
+        for result in results:
+            self.add_page(result)
 
         self.scanner.use('default')
         requests = [p.request for p in self.active_pages[1:]]

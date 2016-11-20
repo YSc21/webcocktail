@@ -42,6 +42,8 @@ class Scanner(object):
         for plugin in self.using:
             if type(plugin) is type:
                 plugin = self._new_plugin(plugin)
+            self.log.info('Using %s to scan %s' %
+                          (plugin.__class__.__name__, request.url))
             results.extend(plugin.get_results(request))
         return results
 

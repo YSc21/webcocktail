@@ -14,9 +14,10 @@ class ScanTemp(Plugin):
         try:
             name, ext = uri.path.split('.')
             name = name.strip('/')
-        except IndexError:
+        except (IndexError, ValueError):
             self.log.error('url pathname %s doesn\'t match \{NAME\}.\{EXT\}',
                            uri.path)
+            return None
         payload = payload.replace('{PAGE}', name)
         uri = uri._replace(path=payload)
         request.url = parse.urlunparse(uri)

@@ -34,13 +34,13 @@ class Plugin(object):
             requests = request if type(request) is list else [request]
             for request in requests:
                 if request is None:
-                    self.log.warning(
+                    self.log.debug(
                         'origin payload: %s and url: %s doesn\'t request'
                         % (payload, origin_request.url))
                     continue
                 response = utils.send(request)
                 response.wct_found_by = self.__class__.__name__
-                self.log.info('{r} {r.url}'.format(r=response))
+                self.log.debug('{r} {r.url}'.format(r=response))
 
                 response = self.filter_response(payload, response)
                 # use `if response is not None` rather than `if response`
