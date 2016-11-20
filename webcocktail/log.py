@@ -52,18 +52,23 @@ def get_log(name):
     return log
 
 
-def print_response(r, fields=[]):
+def print_response(number, r, fields=[]):
     log_format = ('status code: %3s, Content-Length: %5s, url: %s')
+    log_format = get_color('%02d. ' % number, GREEN) + log_format
     if 'Content-Length' in r.headers:
         length = r.headers['Content-Length']
     else:
-        length = len(r.content)
+        length = '-'
     print(log_format % (r.status_code, length, r.url))
 
     if not fields:
+        fields = []
         for field in r.__dict__:
             if field.startswith('wct_'):
-                print('... %s: %s' % (field, r.__dict__[field]))
+                fields.append(field)
     for field in fields:
         if hasattr(r, field) and r.__dict__[field]:
-            print('... %s: %s' % (field, r.__dict__[field]))
+            msg = str(r.__dict__[field])
+            if field == 'wct_comments' or field == 'wct_hidden_inputs':
+                msg = get_color(msg, YELLOW)
+            print('    %s: %s' % (field, msg))

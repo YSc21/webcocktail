@@ -132,10 +132,15 @@ class WebCocktail(object):
         if not filter_function:
             def filter_function(response):
                 return response
+        ret_pages = []
+        i = 0
         for define_category in WebCocktail.CATEGORY:
             if category == define_category or category == 'all':
                 print('===== %s pages =====' % define_category)
                 pages = self.__dict__[define_category + '_pages']
                 for response in pages:
                     if filter_function(response) is not None:
-                        print_response(response, **kwargs)
+                        ret_pages.append(response)
+                        print_response(i, response, **kwargs)
+                        i += 1
+        return ret_pages
