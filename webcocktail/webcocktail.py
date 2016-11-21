@@ -20,7 +20,7 @@ import webcocktail.utils as utils
 class WebCocktail(object):
     CATEGORY = ['active', 'other']
 
-    def __init__(self, url='', extra_url=[], extra_domain=[]):
+    def __init__(self, url='', extra_url=[], extra_domain=[], debug=False):
         self.log = get_log(self.__class__.__name__)
         self.target = utils.check_url(url)
         self.extra_domain = extra_domain
@@ -29,7 +29,7 @@ class WebCocktail(object):
         self.active_pages = []
         self.active_hashes = dict()
         self.other_pages = []
-        self.scanner = Scanner(self)
+        self.scanner = Scanner(self, debug)
 
         self.extra_url.extend(self.get_robots_disallow(self.target))
         self.crawl(self.target, self.extra_domain)

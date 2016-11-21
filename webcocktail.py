@@ -14,7 +14,10 @@ def main():
         '--cookie', metavar='cookie', default='',
         help='set default cookie for requests')
     parser.add_argument(
-        '--domain', nargs='*', metavar='domain', default=[],
+        '-debug', action='store_true',
+        help='plugins debug mode')
+    parser.add_argument(
+        '--domain', nargs='*', metavar='d', dest='extra_domain', default=[],
         help='extra carwler doamins')
     parser.add_argument(
         '-i', dest='interactive', action='store_true',
@@ -23,14 +26,12 @@ def main():
         '-noi', dest='interactive', action='store_false', default=True,
         help='without ipython interactive mode (default)')
     parser.add_argument(
-        '--urls', nargs='*', metavar='urls', default=[],
+        '--urls', nargs='*', metavar='u', dest='extra_url', default=[],
         help='other pages which you want to crawl')
     parser.add_argument(
         'url', metavar='url',
         help='a website which you want to analysis')
     args = vars(parser.parse_args())
-    args['extra_domain'] = args.pop('domain')
-    args['extra_url'] = args.pop('urls')
     cookie = args.pop('cookie')
     interactive = args.pop('interactive')
 
