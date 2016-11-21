@@ -27,17 +27,20 @@ class WebCocktail(object):
         self.extra_url = extra_url
 
         self.active_pages = []
-        self.active_hashes = []
+        self.active_hashes = dict()
         self.other_pages = []
         self.scanner = Scanner(self)
 
+        self.extra_url.extend(self.get_robots_disallow(self.target))
         self.crawl(self.target, self.extra_domain)
         self.default_scan()
 
     def filter_page(self, category, response):
         hashes = self.__dict__[category + '_hashes']
+        url = response.url
         new_hash = utils.hash(response.content)
-        if new_hash in hashes:
+
+        if (url in hashes and new_hash in hashes[url]):
             self.log.info('%s has been in %s_pages' %
                           (response.url, category))
             return None
@@ -54,13 +57,16 @@ class WebCocktail(object):
             self.__dict__[category + '_pages'].append(response)
             if category != 'other':
                 hashes = self.__dict__[category + '_hashes']
+                url = response.url
                 new_hash = utils.hash(response.content)
-                hashes.append(new_hash)
+                if url not in hashes:
+                    hashes[url] = []
+                hashes[url].append(new_hash)
             self.log.info(
                 'Found a new response: {r} {r.url}'.format(r=response))
 
     def get_robots_disallow(self, url):
-        self.log.info('Checking robots.txt disallow')
+        self.log.info('===== Checking robots.txt disallow =====')
         ret_urls = []
         if not url.endswith('robots.txt'):
             url += 'robots.txt'
@@ -73,9 +79,9 @@ class WebCocktail(object):
         return ret_urls
 
     def crawl(self, target, extra_domain=[]):
-        self.extra_url.extend(self.get_robots_disallow(target))
+        self.log.info('===== crawling =====')
         urls = [target] + self.extra_url
-        domains = [parse.urlparse(target).netloc] + extra_domain
+        domains = [parse.urlparse(target).hostname] + extra_domain
         kwargs = {'urls': urls, 'allowed_domains': domains}
 
         if os.path.isfile(config.CRAWLER_LOG):
@@ -131,6 +137,7 @@ class WebCocktail(object):
             self.add_page(response)
 
     def default_scan(self):
+        self.log.info('===== default scan =====')
         index_request = self.active_pages[0].request
 
         self.scanner.use('ScanFile')

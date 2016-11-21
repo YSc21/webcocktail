@@ -1,3 +1,4 @@
+from urllib import parse
 from webcocktail.log import get_log
 import webcocktail.utils as utils
 
@@ -6,6 +7,7 @@ class Plugin(object):
     def __init__(self):
         self.log = get_log(self.__class__.__name__)
         self._payloads = self.load_payloads()
+        self.url_hashes = dict()
 
     def load_payloads(self):
         payloads = []
@@ -58,6 +60,16 @@ class Plugin(object):
         raise NotImplementedError('tamper_request should be implemented.')
 
     def filter_response(self, payload, response):
-        if response.status_code != 404:
-            return response
-        return None
+        new_hash = utils.hash(response.content)
+        uri = parse.urlparse(response.url)
+        url = parse.urlunparse(uri._replace(query=''))
+
+        if response.status_code == 404:
+            return None
+        if url in self.url_hashes and new_hash in self.url_hashes[url]:
+            return None
+
+        if url not in self.url_hashes:
+            self.url_hashes[url] = []
+        self.url_hashes[url].append(new_hash)
+        return response
