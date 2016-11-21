@@ -49,8 +49,6 @@ class FuzzParam(Plugin):
         return requests
 
     def tamper_request(self, payload, request):
-        request.allow_redirects = False
-        request.verify = False
         uri = parse.urlparse(request.url)
         self.log.debug('payload: %s' % payload)
 

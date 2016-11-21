@@ -1,4 +1,8 @@
 # crawler and requests User-Agent
+REQUEST = {
+    'allow_redirects': True,
+    'verify': False
+}
 HEADERS = {
     'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
 }

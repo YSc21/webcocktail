@@ -29,8 +29,9 @@ def get_default_request(request):
 
 
 def send(request):
+    # TODO: modifiy config.REQUEST by plugin
     session = requests.session()
-    response = session.send(request)
+    response = session.send(request, **config.REQUEST)
     return response
 
 
@@ -38,7 +39,7 @@ def send_url(method='GET', url=''):
     if not url:
         log.error('Empty url in send_url')
         exit()
-    request = {'method': method, 'url': url, 'headers': config.HEADERS,
-               'allow_redirects': False, 'verify': False}
+    request = {'method': method, 'url': url, 'headers': config.HEADERS}
+    request.update(config.REQUEST)
     response = requests.request(**request)
     return response

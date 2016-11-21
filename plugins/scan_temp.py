@@ -12,8 +12,6 @@ class ScanTemp(Plugin):
         if request.url in ScanTemp.ignore_pages:
             self.log.debug('Ignore url: %s' % request.url)
             return None
-        request.allow_redirects = False
-        request.verify = False
         uri = parse.urlparse(request.url)
         try:
             name, ext = uri.path.split('.')
