@@ -11,10 +11,10 @@ def main():
         description='An automatic and lightweight'
         ' web application scanning tool for CTF.')
     parser.add_argument(
-        '-cookie', metavar='cookie', default='',
+        '--cookie', metavar='cookie', default='',
         help='set default cookie for requests')
     parser.add_argument(
-        '-domain', nargs='*', metavar='domain', default=[],
+        '--domain', nargs='*', metavar='domain', default=[],
         help='extra carwler doamins')
     parser.add_argument(
         '-i', dest='interactive', action='store_true',
@@ -23,7 +23,7 @@ def main():
         '-noi', dest='interactive', action='store_false', default=True,
         help='without ipython interactive mode (default)')
     parser.add_argument(
-        '-urls', nargs='*', metavar='urls', default=[],
+        '--urls', nargs='*', metavar='urls', default=[],
         help='other pages which you want to crawl')
     parser.add_argument(
         'url', metavar='url',
@@ -38,6 +38,7 @@ def main():
         config.HEADERS['cookie'] = cookie
 
     wct = WebCocktail(**args)
+    wct.nmap(wct.target)
     results = wct.show_pages()
     if interactive:
         print('\n'
