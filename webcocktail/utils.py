@@ -32,3 +32,13 @@ def send(request):
     session = requests.session()
     response = session.send(request)
     return response
+
+
+def send_url(method='GET', url=''):
+    if not url:
+        log.error('Empty url in send_url')
+        exit()
+    request = {'method': method, 'url': url, 'headers': config.HEADERS,
+               'allow_redirects': False, 'verify': False}
+    response = requests.request(**request)
+    return response

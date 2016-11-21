@@ -72,3 +72,5 @@ def print_response(number, r, fields=[]):
             if field == 'wct_comments' or field == 'wct_hidden_inputs':
                 msg = get_color(msg, YELLOW)
             print('    %s: %s' % (field, msg))
+    if 'robots.txt' in r.url:
+        print('%s' % get_color(r.text, YELLOW))

@@ -6,6 +6,7 @@ import re
 import requests
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+from subprocess import call
 from urllib import parse
 from webcocktail.crawler.items import ResponseItem
 from webcocktail.crawler.spiders.explore import ExploreSpider
@@ -58,10 +59,25 @@ class WebCocktail(object):
             self.log.info(
                 'Found a new response: {r} {r.url}'.format(r=response))
 
+    def get_robots_disallow(self, url):
+        self.log.info('Checking robots.txt disallow')
+        ret_urls = []
+        if not url.endswith('robots.txt'):
+            url += 'robots.txt'
+        response = utils.send_url(url=url)
+        pages = re.findall('Disallow: (.*)', response.text)
+        for page in pages:
+            page = page[1:] if page[0] == '/' else page
+            self.log.info('Found %s' % self.target + page)
+            ret_urls.append(self.target + page)
+        return ret_urls
+
     def crawl(self, target, extra_domain=[]):
+        self.extra_url.extend(self.get_robots_disallow(target))
         urls = [target] + self.extra_url
         domains = [parse.urlparse(target).netloc] + extra_domain
         kwargs = {'urls': urls, 'allowed_domains': domains}
+
         if os.path.isfile(config.CRAWLER_LOG):
             os.remove(config.CRAWLER_LOG)
         if os.path.isfile(config.CRAWLER_RESULT):
@@ -90,7 +106,8 @@ class WebCocktail(object):
                     utils.hash(page['content'].encode())):
                 self.log.warning(
                     'Different request %s content '
-                    'between crawler and requests' % response.url)
+                    'between crawler and requests. '
+                    'The url may be dynamic page.' % response.url)
             self.add_page(response)
 
         # TODO: how to extract 302, 404 in scrapy?
@@ -103,9 +120,7 @@ class WebCocktail(object):
                 method, url = re.findall('.*<(.*) (.*)>.*', parsed[-1])[0]
             else:
                 status_code, method, url, _ = parsed
-            request = {'method': method, 'url': url,
-                       'allow_redirects': False, 'verify': False}
-            response = requests.request(**request)
+            response = utils.send_url(method=method, url=url)
             response.wct_found_by = 'crawler'
             if response.status_code != int(status_code):
                 self.log.warning(
@@ -130,6 +145,12 @@ class WebCocktail(object):
         for result in results:
             self.add_page(result)
         return results
+
+    def nmap(self, url):
+        # TODO: create a plugin
+        print('===== nmap %s =====' % url)
+        call(['nmap', '-v', '-A', '-Pn', url])
+        print()
 
     def show_pages(self, category='all', filter_function=None, **kwargs):
         if not filter_function:
