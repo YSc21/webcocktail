@@ -22,9 +22,13 @@ def hash(value):
     return sha1.hexdigest()
 
 
+def get_default_request(request):
+    for field in config.HEADERS:
+        request.headers[field] = config.HEADERS[field]
+    return request
+
+
 def send(request):
     session = requests.session()
-    if 'requests' in request.headers['User-Agent']:
-        request.headers['User-Agent'] = config.USER_AGENT
     response = session.send(request)
     return response

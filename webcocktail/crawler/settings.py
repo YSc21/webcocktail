@@ -24,7 +24,7 @@ FEED_FORMAT = 'json'
 FEED_URI = config.CRAWLER_RESULT
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = config.USER_AGENT
+USER_AGENT = config.HEADERS['User-Agent']
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False

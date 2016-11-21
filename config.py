@@ -1,5 +1,7 @@
 # crawler and requests User-Agent
-USER_AGENT = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
+HEADERS = {
+    'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)'
+}
 
 # save crawler's log and result
 CRAWLER_LOG = 'crawler.log'

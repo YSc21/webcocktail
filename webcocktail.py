@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import config
 from webcocktail.webcocktail import WebCocktail
 
 
@@ -12,6 +13,9 @@ def main():
     parser.add_argument(
         '-domain', nargs='*', metavar='domain', default=[],
         help='extra carwler doamins')
+    parser.add_argument(
+        '-cookie', metavar='cookie', default='',
+        help='set default cookie for requests')
     parser.add_argument(
         '-i', dest='interactive', action='store_true',
         help='with ipython interactive mode')
@@ -24,6 +28,10 @@ def main():
     args = vars(parser.parse_args())
     args['extra_domain'] = args.pop('domain')
     interactive = args.pop('interactive')
+
+    cookie = args.pop('cookie')
+    if cookie:
+        config.HEADERS['cookie'] = cookie
 
     wct = WebCocktail(**args)
     wct.show_pages()

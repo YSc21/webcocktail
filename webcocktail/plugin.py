@@ -29,6 +29,7 @@ class Plugin(object):
         results = []
         for payload in self.payloads:
             request = origin_request.copy()
+            request = utils.get_default_request(request)
             request = self.tamper_request(payload, request)
 
             requests = request if type(request) is list else [request]
