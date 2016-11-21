@@ -19,10 +19,12 @@ import webcocktail.utils as utils
 class WebCocktail(object):
     CATEGORY = ['active', 'other']
 
-    def __init__(self, url='', extra_domain=[]):
+    def __init__(self, url='', extra_url=[], extra_domain=[]):
         self.log = get_log(self.__class__.__name__)
         self.target = utils.check_url(url)
         self.extra_domain = extra_domain
+        self.extra_url = extra_url
+
         self.active_pages = []
         self.active_hashes = []
         self.other_pages = []
@@ -57,8 +59,9 @@ class WebCocktail(object):
                 'Found a new response: {r} {r.url}'.format(r=response))
 
     def crawl(self, target, extra_domain=[]):
+        urls = [target] + self.extra_url
         domains = [parse.urlparse(target).netloc] + extra_domain
-        kwargs = {'urls': [target], 'allowed_domains': domains}
+        kwargs = {'urls': urls, 'allowed_domains': domains}
         if os.path.isfile(config.CRAWLER_LOG):
             os.remove(config.CRAWLER_LOG)
         if os.path.isfile(config.CRAWLER_RESULT):
