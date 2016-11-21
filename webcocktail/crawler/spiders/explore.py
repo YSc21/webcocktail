@@ -74,9 +74,13 @@ class ExploreSpider(scrapy.Spider):
         for form in response.xpath('//form'):
             action = form.xpath('@action').extract_first()
             method = form.xpath('@method').extract_first()
-            inputs = form.xpath('input')
+            if not method:
+                method = 'GET'
+            inputs = form.xpath('.//input')
 
-            formdata = dict(list(map(self._get_input_data, inputs)))
+            formdata_list = list(map(self._get_input_data, inputs))
+            formdata_list = list(filter(lambda x: x[0] != '', formdata_list))
+            formdata = dict(formdata_list)
 
             next_page = response.urljoin(action)
             if method == 'POST':
