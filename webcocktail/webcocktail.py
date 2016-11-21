@@ -47,6 +47,11 @@ class WebCocktail(object):
         return response
 
     def add_page(self, response):
+        # add history response (302)
+        if response.history:
+            for r in response.history:
+                self.add_page(r)
+
         if response.status_code == 200:
             category = 'active'
             response = self.filter_page(category, response)
@@ -104,6 +109,7 @@ class WebCocktail(object):
         with open(config.CRAWLER_RESULT, 'r') as f:
             crawled_pages = json.load(f)
         for page in crawled_pages:
+            page['request'].update(config.REQUEST)
             response = requests.request(**page['request'])
             response.wct_found_by = 'crawler'
             response.wct_comments = page['comments']
@@ -146,12 +152,17 @@ class WebCocktail(object):
             self.add_page(result)
 
         self.scanner.use('default')
-        requests = [p.request for p in self.active_pages[1:]]
-        results.extend(self.scanner.scan_all(requests))
-
+        # scan active pages
+        requests = [p.request for p in self.active_pages]
+        results = self.scanner.scan_all(requests)
         for result in results:
             self.add_page(result)
-        return results
+        # scan 302 pages
+        pages_302 = [p for p in self.other_pages if p.status_code == 302]
+        requests = [p.request for p in pages_302]
+        results = self.scanner.scan_all(requests)
+        for result in results:
+            self.add_page(result)
 
     def nmap(self, url):
         # TODO: create a plugin
@@ -174,4 +185,5 @@ class WebCocktail(object):
                         ret_pages.append(response)
                         print_response(i, response, **kwargs)
                         i += 1
+                print()
         return ret_pages

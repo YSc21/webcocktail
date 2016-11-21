@@ -26,6 +26,21 @@ class Plugin(object):
             payload = self.tamper_payload(payload)
             yield payload
 
+    def filter_response(self, response):
+        new_hash = utils.hash(response.content)
+        uri = parse.urlparse(response.url)
+        url = parse.urlunparse(uri._replace(query=''))
+
+        if response.status_code == 404:
+            return None
+        if url in self.url_hashes and new_hash in self.url_hashes[url]:
+            return None
+
+        if url not in self.url_hashes:
+            self.url_hashes[url] = []
+        self.url_hashes[url].append(new_hash)
+        return response
+
     def get_results(self, request):
         origin_request = request
         results = []
@@ -46,11 +61,14 @@ class Plugin(object):
                 response.wct_payload = payload
                 self.log.debug('{r} {r.url}'.format(r=response))
 
-                response = self.filter_response(payload, response)
-                # use `if response is not None` rather than `if response`
-                # because 403 in `if response` will be False
-                if response is not None:
-                    results.append(response)
+                # also check 302 history
+                responses = [response] + response.history
+                for response in responses:
+                    response = self.filter_response(response)
+                    # use `if response is not None` rather than `if response`
+                    # because 403 in `if response` will be False
+                    if response is not None:
+                        results.append(response)
         return results
 
     def tamper_payload(self, payload):
@@ -58,18 +76,3 @@ class Plugin(object):
 
     def tamper_request(self, payload, request):
         raise NotImplementedError('tamper_request should be implemented.')
-
-    def filter_response(self, payload, response):
-        new_hash = utils.hash(response.content)
-        uri = parse.urlparse(response.url)
-        url = parse.urlunparse(uri._replace(query=''))
-
-        if response.status_code == 404:
-            return None
-        if url in self.url_hashes and new_hash in self.url_hashes[url]:
-            return None
-
-        if url not in self.url_hashes:
-            self.url_hashes[url] = []
-        self.url_hashes[url].append(new_hash)
-        return response

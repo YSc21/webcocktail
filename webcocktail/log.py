@@ -53,6 +53,7 @@ def get_log(name):
 
 
 def print_response(number, r, fields=[]):
+    # basic info
     log_format = ('status code: %3s, Content-Length: %5s, url: %s')
     log_format = get_color('%02d. ' % number, GREEN) + log_format
     if 'Content-Length' in r.headers:
@@ -61,6 +62,13 @@ def print_response(number, r, fields=[]):
         length = '-'
     print(log_format % (r.status_code, length, r.url))
 
+    # 302 redirect
+    if r.history:
+        print('    history: %s' % get_color(str(r.history), YELLOW))
+    if r.status_code == 302:
+        print('    redirect to: %s' % get_color(r.headers['Location'], YELLOW))
+
+    # fields
     if not fields:
         fields = []
         for field in r.__dict__:
@@ -72,5 +80,7 @@ def print_response(number, r, fields=[]):
             if field == 'wct_comments' or field == 'wct_hidden_inputs':
                 msg = get_color(msg, YELLOW)
             print('    %s: %s' % (field, msg))
+
+    # robots.txt
     if 'robots.txt' in r.url:
         print('%s' % get_color(r.text, YELLOW))
