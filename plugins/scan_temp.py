@@ -23,6 +23,6 @@ class ScanTemp(Plugin):
             ScanTemp.ignore_pages.append(request.url)
             return None
         payload = payload.replace('{PAGE}', name)
-        uri = uri._replace(path=payload, query='')
+        uri = uri._replace(path=payload, params='', query='', fragment='')
         request.url = parse.urlunparse(uri)
         return request

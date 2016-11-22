@@ -22,6 +22,14 @@ def hash(value):
     return sha1.hexdigest()
 
 
+def get_path_hash(response):
+    # use url without params, query and fragment
+    uri = parse.urlparse(response.url)
+    url_path = parse.urlunparse(uri._replace(params='', query='', fragment=''))
+    new_hash = hash(response.content)
+    return url_path, new_hash
+
+
 def get_default_request(request):
     for field in config.HEADERS:
         request.headers[field] = config.HEADERS[field]

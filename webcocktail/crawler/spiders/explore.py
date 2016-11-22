@@ -2,7 +2,6 @@
 import scrapy
 from webcocktail.crawler.items import RequestItem
 from webcocktail.crawler.items import ResponseItem
-from webcocktail.error import ExploreSpiderError
 from urllib import parse
 
 

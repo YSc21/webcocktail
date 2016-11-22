@@ -1,5 +1,7 @@
+from difflib import unified_diff
 import logging
 from pprint import pprint
+import re
 
 FOREGROUND = 30
 BACKGROUND = 40
@@ -52,7 +54,7 @@ def get_log(name):
     return log
 
 
-def print_response(number, r, fields=[]):
+def print_response(number, r, pages, fields=[], max_diff_line=30):
     # basic info
     log_format = ('status code: %3s, Content-Length: %5s, url: %s')
     log_format = get_color('%02d. ' % number, GREEN) + log_format
@@ -70,10 +72,7 @@ def print_response(number, r, fields=[]):
 
     # fields
     if not fields:
-        fields = []
-        for field in r.__dict__:
-            if field.startswith('wct_'):
-                fields.append(field)
+        fields = [field for field in r.__dict__ if field.startswith('wct_')]
     for field in fields:
         if hasattr(r, field) and r.__dict__[field]:
             msg = str(r.__dict__[field])
@@ -84,3 +83,25 @@ def print_response(number, r, fields=[]):
     # robots.txt
     if 'robots.txt' in r.url:
         print('%s' % get_color(r.text, YELLOW))
+    # diff
+    url_path, _ = utils.get_path_hash(r)
+    first_response = [p for p in pages if p.url.startswith(url_path)][0]
+    diff = unified_diff(first_response.text.splitlines(keepends=True),
+                        r.text.splitlines(keepends=True),
+                        fromfile=first_response.url, tofile=r.url)
+    lines = list(diff)
+    if len(lines) > max_diff_line:
+        lines = lines[:max_diff_line]  # limit printed lines
+        lines.append('...\n')
+    for i in range(len(lines)):
+        if lines[i][0] == '+' and i > 2:
+            lines[i] = get_color(lines[i], CYAN)
+            for e in ['notice', 'warning', 'error']:
+                pattern = re.findall(e, lines[i], re.IGNORECASE)
+                for p in pattern:
+                    replace = (get_color(p, YELLOW) +
+                               (COLOR_SEQ % (FOREGROUND + CYAN)))
+                    lines[i] = lines[i].replace(p, replace)
+    print(''.join(lines))
+
+import webcocktail.utils as utils

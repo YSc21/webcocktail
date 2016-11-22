@@ -10,7 +10,6 @@ from subprocess import call
 from urllib import parse
 from webcocktail.crawler.items import ResponseItem
 from webcocktail.crawler.spiders.explore import ExploreSpider
-from webcocktail.error import CrawlerError
 from webcocktail.log import get_log
 from webcocktail.log import print_response
 from webcocktail.scanner import Scanner
@@ -29,44 +28,69 @@ class WebCocktail(object):
         self.active_pages = []
         self.active_hashes = dict()
         self.other_pages = []
+        self.other_hashes = dict()
         self.scanner = Scanner(self, debug)
 
         self.extra_url.extend(self.get_robots_disallow(self.target))
         self.crawl(self.target, self.extra_domain)
         self.default_scan()
 
+    def _add_hash(self, category, response):
+        hashes = self.__dict__[category + '_hashes']
+        url_path, new_hash = utils.get_path_hash(response)
+
+        if url_path not in hashes:
+            hashes[url_path] = []
+        hashes[url_path].append(new_hash)
+
+    def _add_crawled_page(self, response, page=None, status_code=None):
+        response.wct_found_by = 'crawler'
+        if page:
+            response.wct_comments = page['comments']
+            response.wct_hidden_inputs = page['hidden_inputs']
+        for r in response.history:
+            r.wct_found_by = 'crawler'
+        if (page and
+                utils.hash(response.content) !=
+                utils.hash(page['content'].encode())):
+            self.log.warning(
+                'Different request %s content '
+                'between crawler and requests. '
+                'The url may be dynamic page.' % response.url)
+        if (status_code and response.status_code != status_code
+                and status_code != 302 and status_code):
+            self.log.warning(
+                'Different request between crawler and requests: '
+                '%s should be %d but got %d' % (
+                    response.url, status_code, response.status_code)
+            )
+        self.add_page(response)
+
     def filter_page(self, category, response):
         hashes = self.__dict__[category + '_hashes']
-        url = response.url
-        new_hash = utils.hash(response.content)
+        url_path, new_hash = utils.get_path_hash(response)
 
-        if (url in hashes and new_hash in hashes[url]):
+        if url_path in hashes and new_hash in hashes[url_path]:
             self.log.info('%s has been in %s_pages' %
                           (response.url, category))
             return None
         return response
 
     def add_page(self, response):
-        # add history response (302)
+        # check history response (302)
         if response.history:
             for r in response.history:
                 self.add_page(r)
 
         if response.status_code == 200:
             category = 'active'
-            response = self.filter_page(category, response)
         else:
             category = 'other'
+        response = self.filter_page(category, response)
 
         if response is not None:
             self.__dict__[category + '_pages'].append(response)
-            if category != 'other':
-                hashes = self.__dict__[category + '_hashes']
-                url = response.url
-                new_hash = utils.hash(response.content)
-                if url not in hashes:
-                    hashes[url] = []
-                hashes[url].append(new_hash)
+            self._add_hash(category, response)
             self.log.info(
                 'Found a new response: {r} {r.url}'.format(r=response))
 
@@ -102,8 +126,9 @@ class WebCocktail(object):
             lines = f.readlines()
         log = ''.join(lines)
         if 'Error: ' in log:
-            raise CrawlerError('There are some errors in crawler. '
-                               'Please check up %s' % config.CRAWLER_LOG)
+            self.log.critical('There are some errors in crawler. '
+                              'Please check up %s' % config.CRAWLER_LOG)
+            exit()
 
         # load status code 200 page
         with open(config.CRAWLER_RESULT, 'r') as f:
@@ -111,18 +136,8 @@ class WebCocktail(object):
         for page in crawled_pages:
             page['request'].update(config.REQUEST)
             response = requests.request(**page['request'])
-            response.wct_found_by = 'crawler'
-            response.wct_comments = page['comments']
-            response.wct_hidden_inputs = page['hidden_inputs']
-            if (utils.hash(response.content) !=
-                    utils.hash(page['content'].encode())):
-                self.log.warning(
-                    'Different request %s content '
-                    'between crawler and requests. '
-                    'The url may be dynamic page.' % response.url)
-            self.add_page(response)
+            self._add_crawled_page(response, page=page)
 
-        # TODO: how to extract 302, 404 in scrapy?
         # load other status code (302, 404, ...) response in config.CRAWLER_LOG
         parsed_other = re.findall(
             '(?!.*\(200\).*).*DEBUG:.*\((\d*)\).*<(.*) (.*)> (.*)', log)
@@ -132,15 +147,9 @@ class WebCocktail(object):
                 method, url = re.findall('.*<(.*) (.*)>.*', parsed[-1])[0]
             else:
                 status_code, method, url, _ = parsed
+            status_code = int(status_code)
             response = utils.send_url(method=method, url=url)
-            response.wct_found_by = 'crawler'
-            if response.status_code != int(status_code):
-                self.log.warning(
-                    'Different request between crawler and requests: '
-                    '%s should be %d but got %d' % (
-                        response.url, int(status_code), response.status_code)
-                )
-            self.add_page(response)
+            self._add_crawled_page(response, status_code=status_code)
 
     def default_scan(self):
         self.log.info('===== default scan =====')
@@ -183,7 +192,7 @@ class WebCocktail(object):
                 for response in pages:
                     if filter_function(response) is not None:
                         ret_pages.append(response)
-                        print_response(i, response, **kwargs)
+                        print_response(i, response, pages, **kwargs)
                         i += 1
                 print()
         return ret_pages
