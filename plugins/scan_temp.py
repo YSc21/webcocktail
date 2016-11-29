@@ -1,6 +1,5 @@
 import config
 from urllib import parse
-from webcocktail.log import get_log
 from webcocktail.plugin import Plugin
 
 

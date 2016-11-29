@@ -1,5 +1,4 @@
 import config
-from webcocktail.log import get_log
 from webcocktail.plugin import Plugin
 
 
