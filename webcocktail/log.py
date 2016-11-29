@@ -43,6 +43,24 @@ class Handler(logging.StreamHandler):
         self.setFormatter(formatter)
 
 
+def _print_diff_result(diff, max_diff_line):
+    lines = list(diff)[2:]
+    if len(lines) > max_diff_line:
+        lines = lines[:max_diff_line]  # limit printed lines
+        lines.append('...\n')
+
+    for i in range(len(lines)):
+        if lines[i][0] == '+':
+            lines[i] = get_color(lines[i], CYAN)
+            for e in ['notice', 'warning', 'error']:
+                pattern = re.findall(e, lines[i], re.IGNORECASE)
+                for p in pattern:
+                    replace = (get_color(p, YELLOW) +
+                               (COLOR_SEQ % (FOREGROUND + CYAN)))
+                    lines[i] = lines[i].replace(p, replace)
+    print(''.join(lines))
+
+
 def get_color(msg, color):
     return (COLOR_SEQ % (FOREGROUND + color) + msg + RESET_SEQ)
 
@@ -58,11 +76,13 @@ def print_response(number, r, pages, fields=[], max_diff_line=30):
     # basic info
     log_format = ('status code: %3s, Content-Length: %5s, url: %s')
     log_format = get_color('%02d. ' % number, GREEN) + log_format
+    length = '-'
     if 'Content-Length' in r.headers:
         length = r.headers['Content-Length']
-    else:
-        length = '-'
-    print(log_format % (r.status_code, length, r.url))
+    url = r.url
+    if r.wct_found_by == 'ScanFile':
+        url = get_color(r.url, YELLOW)
+    print(log_format % (r.status_code, length, url))
 
     # 302 redirect
     if r.history:
@@ -85,23 +105,10 @@ def print_response(number, r, pages, fields=[], max_diff_line=30):
         print('%s' % get_color(r.text, YELLOW))
     # diff
     url_path, _ = utils.get_path_hash(r)
-    first_response = [p for p in pages if p.url.startswith(url_path)][0]
-    diff = unified_diff(first_response.text.splitlines(keepends=True),
+    first_r = [p for p in pages if utils.get_path_hash(p)[0] == url_path][0]
+    diff = unified_diff(first_r.text.splitlines(keepends=True),
                         r.text.splitlines(keepends=True),
-                        fromfile=first_response.url, tofile=r.url)
-    lines = list(diff)
-    if len(lines) > max_diff_line:
-        lines = lines[:max_diff_line]  # limit printed lines
-        lines.append('...\n')
-    for i in range(len(lines)):
-        if lines[i][0] == '+' and i > 2:
-            lines[i] = get_color(lines[i], CYAN)
-            for e in ['notice', 'warning', 'error']:
-                pattern = re.findall(e, lines[i], re.IGNORECASE)
-                for p in pattern:
-                    replace = (get_color(p, YELLOW) +
-                               (COLOR_SEQ % (FOREGROUND + CYAN)))
-                    lines[i] = lines[i].replace(p, replace)
-    print(''.join(lines))
+                        fromfile=first_r.url, tofile=r.url)
+    _print_diff_result(diff, max_diff_line)
 
 import webcocktail.utils as utils

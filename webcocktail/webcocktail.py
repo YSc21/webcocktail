@@ -1,5 +1,6 @@
 import config
 import json
+from multiprocessing import Process
 import os
 from pprint import pprint
 import re
@@ -32,7 +33,7 @@ class WebCocktail(object):
         self.scanner = Scanner(self, debug)
 
         self.extra_url.extend(self.get_robots_disallow(self.target))
-        self.crawl(self.target, self.extra_domain)
+        self.crawl(self.target, self.extra_url, self.extra_domain)
         self.default_scan()
 
     def _add_hash(self, category, response):
@@ -107,9 +108,9 @@ class WebCocktail(object):
             ret_urls.append(self.target + page)
         return ret_urls
 
-    def crawl(self, target, extra_domain=[]):
-        self.log.info('===== crawling =====')
-        urls = [target] + self.extra_url
+    def crawl(self, target, extra_url=[], extra_domain=[]):
+        self.log.info('===== Crawling =====')
+        urls = [target] + extra_url
         domains = [parse.urlparse(target).hostname] + extra_domain
         kwargs = {'urls': urls, 'allowed_domains': domains}
 
@@ -117,20 +118,39 @@ class WebCocktail(object):
             os.remove(config.CRAWLER_LOG)
         if os.path.isfile(config.CRAWLER_RESULT):
             os.remove(config.CRAWLER_RESULT)
-        process = CrawlerProcess(get_project_settings())
-        process.crawl(ExploreSpider, **kwargs)
-        process.start()
-        process.stop()
 
-        with open(config.CRAWLER_LOG, 'r') as f:
-            lines = f.readlines()
-        log = ''.join(lines)
-        if 'Error: ' in log:
-            self.log.critical('There are some errors in crawler. '
-                              'Please check up %s' % config.CRAWLER_LOG)
-            exit()
+        def _crawl():
+            process = CrawlerProcess(get_project_settings())
+            process.crawl(ExploreSpider, **kwargs)
+            process.start()
+            process.stop()
+        p = Process(target=_crawl)
+        p.start()
+        p.join()
+
+        self.log.info('Parsing crawler log')
+        f = open(config.CRAWLER_LOG, 'r')
+        for log in f:
+            if 'Error: ' in log:
+                self.log.critical('There are some errors in crawler. '
+                                  'Please check up %s' % config.CRAWLER_LOG)
+                exit()
+            # load other status code 302, 404,.. response in config.CRAWLER_LOG
+            parsed_other = re.findall(
+                '(?!.*\(200\).*).*DEBUG:.*\((\d*)\).*<(.*) (.*)> (.*)', log)
+            for parsed in parsed_other:
+                if parsed[0] == '302':
+                    status_code = parsed[0]
+                    method, url = re.findall('.*<(.*) (.*)>.*', parsed[-1])[0]
+                else:
+                    status_code, method, url, _ = parsed
+                status_code = int(status_code)
+                response = utils.send_url(method=method, url=url)
+                self._add_crawled_page(response, status_code=status_code)
+        f.close()
 
         # load status code 200 page
+        self.log.info('Parsing crawler result')
         with open(config.CRAWLER_RESULT, 'r') as f:
             crawled_pages = json.load(f)
         for page in crawled_pages:
@@ -138,21 +158,8 @@ class WebCocktail(object):
             response = requests.request(**page['request'])
             self._add_crawled_page(response, page=page)
 
-        # load other status code (302, 404, ...) response in config.CRAWLER_LOG
-        parsed_other = re.findall(
-            '(?!.*\(200\).*).*DEBUG:.*\((\d*)\).*<(.*) (.*)> (.*)', log)
-        for parsed in parsed_other:
-            if parsed[0] == '302':
-                status_code = parsed[0]
-                method, url = re.findall('.*<(.*) (.*)>.*', parsed[-1])[0]
-            else:
-                status_code, method, url, _ = parsed
-            status_code = int(status_code)
-            response = utils.send_url(method=method, url=url)
-            self._add_crawled_page(response, status_code=status_code)
-
     def default_scan(self):
-        self.log.info('===== default scan =====')
+        self.log.info('===== Default Scan =====')
         index_request = self.active_pages[0].request
 
         self.scanner.use('ScanFile')
@@ -175,8 +182,13 @@ class WebCocktail(object):
 
     def nmap(self, url):
         # TODO: create a plugin
+        uri = parse.urlparse(url)
+        url = uri.hostname
         print('===== nmap %s =====' % url)
-        call(['nmap', '-v', '-A', '-Pn', url])
+        try:
+            call(['nmap', '-v', '-A', '-Pn', url])
+        except:
+            pass
         print()
 
     def show_pages(self, category='all', filter_function=None, **kwargs):

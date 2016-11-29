@@ -37,9 +37,12 @@ def get_default_request(request):
 
 
 def send(request):
-    # TODO: modifiy config.REQUEST by plugin
     session = requests.session()
-    response = session.send(request, **config.REQUEST)
+    try:
+        response = session.send(request, **config.REQUEST)
+    except requests.exceptions.ConnectionError:
+        log.critical('Can\'t access the website %s' % request.url)
+        exit()
     return response
 
 
@@ -49,5 +52,9 @@ def send_url(method='GET', url=''):
         exit()
     request = {'method': method, 'url': url, 'headers': config.HEADERS}
     request.update(config.REQUEST)
-    response = requests.request(**request)
+    try:
+        response = requests.request(**request)
+    except requests.exceptions.ConnectionError:
+        log.critical('Can\'t access the website %s' % url)
+        exit()
     return response
