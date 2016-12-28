@@ -67,6 +67,8 @@ class WebCocktail(object):
                 'Different request %s content '
                 'between crawler and requests. '
                 'The url may be dynamic page.' % response.url)
+            self.log.debug(response.request.headers)
+            self.log.debug(page['request']['headers'])
         if (status_code and response.status_code != status_code
                 and status_code != 302 and status_code):
             self.log.warning(
@@ -172,6 +174,10 @@ class WebCocktail(object):
             crawled_pages = json.load(f)
         for page in crawled_pages:
             page['request'].update(config.REQUEST)
+            if 'Cookie' in page['request']['headers']:
+                cookies = page['request']['headers']['Cookie']
+                cookies = dict(parse.parse_qsl(cookies))
+                page['request']['cookies'] = cookies
             response = requests.request(**page['request'])
             self._add_crawled_page(response, page=page)
 

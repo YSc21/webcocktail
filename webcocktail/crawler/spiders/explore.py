@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import config
 import scrapy
 from webcocktail.crawler.items import RequestItem
 from webcocktail.crawler.items import ResponseItem
@@ -39,7 +40,7 @@ class ExploreSpider(scrapy.Spider):
         request_item['method'] = request.method
         request_item['url'] = request.url
         request_item['headers'] = self._dict_byte2str(request.headers)
-        request_item['cookies'] = self._dict_byte2str(request.cookies)
+        # request_item['cookies'] = self._dict_byte2str(request.cookies)
         # TODO: post json data
         if request.body != b'':
             request_item['data'] = request.body.decode()
@@ -55,7 +56,8 @@ class ExploreSpider(scrapy.Spider):
 
     def start_requests(self):
         for url in self.urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+            yield scrapy.Request(url=url, headers=config.HEADERS,
+                                 callback=self.parse)
 
     def parse(self, response):
         self.logger.debug('===== %s =====' % response)
