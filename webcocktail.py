@@ -20,11 +20,14 @@ def main():
         '--domain', nargs='*', metavar='d', dest='extra_domain', default=[],
         help='extra carwler doamins')
     parser.add_argument(
-        '-i', dest='interactive', action='store_true',
-        help='with ipython interactive mode')
+        '-no-crawl', dest='crawl', action='store_false', default=True,
+        help='without using default crawl')
     parser.add_argument(
-        '-noi', dest='interactive', action='store_false', default=True,
+        '-no-i', dest='interactive', action='store_false', default=True,
         help='without ipython interactive mode (default)')
+    parser.add_argument(
+        '-no-scan', dest='scan', action='store_false', default=True,
+        help='without using default scan plugin (just using ScanFile plugin)')
     parser.add_argument(
         '--urls', nargs='*', metavar='u', dest='extra_url', default=[],
         help='other pages which you want to crawl')

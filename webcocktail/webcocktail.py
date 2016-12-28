@@ -20,7 +20,8 @@ import webcocktail.utils as utils
 class WebCocktail(object):
     CATEGORY = ['active', 'other']
 
-    def __init__(self, url='', extra_url=[], extra_domain=[], debug=False):
+    def __init__(self, url='', extra_url=[], extra_domain=[], debug=False,
+                 crawl=True, scan=True):
         self.log = get_log(self.__class__.__name__)
         self.target = utils.check_url(url)
         self.extra_domain = extra_domain
@@ -33,8 +34,16 @@ class WebCocktail(object):
         self.scanner = Scanner(self, debug)
 
         self.extra_url.extend(self.get_robots_disallow(self.target))
-        self.crawl(self.target, self.extra_url, self.extra_domain)
-        self.default_scan()
+
+        if crawl:
+            self.crawl(self.target, self.extra_url, self.extra_domain)
+        else:
+            self.add_page(utils.send_url(url=self.target))
+
+        if scan:
+            self.default_scan()
+        else:
+            self._scan_index()
 
     def _add_hash(self, category, response):
         hashes = self.__dict__[category + '_hashes']
@@ -66,6 +75,14 @@ class WebCocktail(object):
                     response.url, status_code, response.status_code)
             )
         self.add_page(response)
+
+    def _scan_index(self):
+        index_request = self.active_pages[0].request
+
+        self.scanner.use('ScanFile')
+        results = self.scanner.scan(index_request)
+        for result in results:
+            self.add_page(result)
 
     def filter_page(self, category, response):
         hashes = self.__dict__[category + '_hashes']
@@ -160,12 +177,8 @@ class WebCocktail(object):
 
     def default_scan(self):
         self.log.info('===== Default Scan =====')
-        index_request = self.active_pages[0].request
 
-        self.scanner.use('ScanFile')
-        results = self.scanner.scan(index_request)
-        for result in results:
-            self.add_page(result)
+        self._scan_index()
 
         self.scanner.use('default')
         # scan active pages
