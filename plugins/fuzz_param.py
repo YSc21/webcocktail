@@ -20,6 +20,7 @@ class FuzzParam(Plugin):
             else:
                 params[key] = origin_payload
                 p = parse.urlencode(params, doseq=True)
+            p = parse.unquote(p)
             payloads.append(p)
         self.log.debug('payloads: %s' % payloads)
         return payloads
