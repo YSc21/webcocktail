@@ -170,8 +170,12 @@ class WebCocktail(object):
 
         # load status code 200 page
         self.log.info('Parsing crawler result')
-        with open(config.CRAWLER_RESULT, 'r') as f:
-            crawled_pages = json.load(f)
+        try:
+            with open(config.CRAWLER_RESULT, 'r') as f:
+                crawled_pages = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.log.error('Parse json result error')
+            crawled_pages = {}
         for page in crawled_pages:
             page['request'].update(config.REQUEST)
             if 'Cookie' in page['request']['headers']:
