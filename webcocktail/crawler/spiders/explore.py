@@ -16,6 +16,7 @@ class ExploreSpider(scrapy.Spider):
         if not self.allowed_domains:
             raise ValueError("%s must have a domain" % type(self).__name__)
         ExploreSpider.allowed_domains = self.allowed_domains
+        self.requested_form = set()
 
     def _get_input_data(self, attr_input):
         name = attr_input.xpath('@name').extract_first()
@@ -74,7 +75,7 @@ class ExploreSpider(scrapy.Spider):
         # parse form
         for form in response.xpath('//form'):
             action = form.xpath('@action').extract_first()
-            method = form.xpath('@method').extract_first()
+            method = form.xpath('@method').extract_first().upper()
             if not method:
                 method = 'GET'
             inputs = form.xpath('.//input')
@@ -82,6 +83,10 @@ class ExploreSpider(scrapy.Spider):
             formdata_list = list(map(self._get_input_data, inputs))
             formdata_list = list(filter(lambda x: x[0] != '', formdata_list))
             formdata = dict(formdata_list)
+            if str(formdata) in self.requested_form:
+                continue
+            else:
+                self.requested_form.add(str(formdata))
 
             next_page = response.urljoin(action)
             if method == 'POST':
