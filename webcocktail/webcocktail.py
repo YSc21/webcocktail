@@ -153,6 +153,7 @@ class WebCocktail(object):
             if 'Error: ' in log:
                 self.log.critical('There are some errors in crawler. '
                                   'Please check up %s' % config.CRAWLER_LOG)
+                self.log.critical(log)
                 exit()
             # load other status code 302, 404,.. response in config.CRAWLER_LOG
             parsed_other = re.findall(
