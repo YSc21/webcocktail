@@ -53,11 +53,11 @@ class Scanner(object):
             except KeyboardInterrupt:
                 c = input('\nSkip this (p)lugin, (r)equest? ')
                 if c[0] == 'p':
-                    self.log.info('Skip: Using %s to scan %s' %
+                    self.log.warning('Skip: Using %s to scan %s' %
                                   (plugin.__class__.__name__, request.url))
                     continue
                 elif c[0] == 'r':
-                    self.log.info('Skip: Scan %s' % request.url)
+                    self.log.warning('Skip: Scan %s' % request.url)
                     break
         return results
 
