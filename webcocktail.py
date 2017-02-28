@@ -24,7 +24,7 @@ def main():
         help='without using default crawl')
     parser.add_argument(
         '-no-i', dest='interactive', action='store_false', default=True,
-        help='without ipython interactive mode (default)')
+        help='without ipython interactive mode')
     parser.add_argument(
         '-no-scan', dest='scan', action='store_false', default=True,
         help='without using default scan plugin (just using ScanFile plugin)')
