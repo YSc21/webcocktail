@@ -59,6 +59,7 @@ def _print_diff_result(diff, max_diff_line):
                                (COLOR_SEQ % (FOREGROUND + CYAN)))
                     lines[i] = lines[i].replace(p, replace)
     print(''.join(lines))
+    print('')
 
 
 def get_color(msg, color):
