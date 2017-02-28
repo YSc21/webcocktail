@@ -2,11 +2,15 @@ robots.txt
 .git/HEAD
 .svn
 .hg
+.DS_Store
 ..
 server-status
+server-info
 config.php
 flag
 flag.php
+phpinfo.php
+test.php
 wwwroot.zip
 wwwroot.rar
 root.zip
@@ -22,8 +26,10 @@ database.sql
 
 # admin page
 admin.php
-admin/
+admin
 phpMyAdmin/
+admin-console/
+web-console/
 
 # upload file page
 upload/
